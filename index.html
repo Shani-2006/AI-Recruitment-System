@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת סינון ומיון מועמדים</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>CV system</h1>
+ 
+    
+    <label for="leadInput">כתוב פניה להגשת מועמדות</label>
+    <h4>ספר לנו עליך קצת</h4>
+    <textarea id="leadInput" placeholder="לדוגמא: הי אני שני, אני מעוניינת להגיש מועמדות למשרת   מפתח/ת Front End (Junior) 
+    למדתי קורסי React, Angular, JS, Python אני ללא ניסיון, צעירה ומלאת מוטיבציה  "></textarea>
+    
+
+    <button onclick="analyzeLead()">שליחה</button>
+
+    <div id="result" class="result-area">
+        <strong>הנתונים נשלחו בהצלחה</strong>
+        <p id="resultText"></p>
+    </div>
+</div>
+
+<script>
+    async function analyzeLead() {
+       const input = document.getElementById('leadInput').value;
+    
+  
+    if (!input.trim()) {
+        alert("נא להזין טקסט לפני השליחה :)");
+        return;
+    }
+        
+        const resultArea = document.getElementById('result');
+        const resultText = document.getElementById('resultText');
+
+        resultArea.style.display = 'block';
+        resultText.style.textAlign = 'right';
+        resultText.style.direction = 'rtl';
+        resultText.innerText = "מעבד נתונים ושולח לטבלת הגיוס...";
+
+        try {
+            const response = await fetch('http://127.0.0.1:5000/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: input })
+            });
+
+            const data = await response.json();
+            
+            if (data.status === "success") {
+                const candidate = data.data;
+                
+              
+                resultText.innerHTML = `
+                    <div style="line-height: 1.6;">
+                        <p style="color: #28a745; font-weight: bold; font-size: 1.1em;">✅ הנתונים נותחו ונשמרו בהצלחה בטבלה!</p>
+                        <hr style="border: 0; border-top: 1px solid #ccc; margin: 10px 0;">
+                        <p><strong>👤 שם המועמד:</strong> ${candidate.candidate_name}</p>
+                        <p><strong>💼 משרה:</strong> ${candidate.job_title}</p>
+                        <p><strong>⏳ שנות ניסיון:</strong> ${candidate.experience_years}</p>
+                        <p><strong>🛠️ כישורים:</strong> ${candidate.top_skills.join(', ')}</p>
+                        <p><strong>📝 סיכום AI:</strong> ${candidate.summary}</p>
+                    </div>
+                `;
+            } else {
+                resultText.innerText = "שגיאה מהשרת: " + data.message;
+            }
+        } catch (error) {
+            resultText.innerText = "שגיאת תקשורת. וודאי ששרת הפייתון (app.py) רץ בטרמינל.";
+            console.error("Error:", error);
+        }
+    }
+</script>
+
+</body>
+</html>
